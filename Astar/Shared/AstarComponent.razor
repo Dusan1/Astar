@@ -1,0 +1,50 @@
+﻿
+<h3>Astar</h3>
+
+
+
+<div class="wrapper">
+    
+@for (int row = 0; row < end.GetLength(0); row++)
+{
+   
+        @for (int column = 0; column  < end.GetLength(1); column++)
+        {
+            int rowToPass = row;
+            int columnToPass = column;
+          
+            <button
+                    class="@css(rowToPass, columnToPass)"
+                    @onclick="() => SetAsObstacle(rowToPass, columnToPass)" style="margin:5%;">
+            </button>   
+        }
+   
+}
+   
+</div>
+
+
+
+
+@code {
+ 
+    bool[,] end = new bool[10, 10];
+
+    string css(int row, int column) {
+        return nodeObstacles.Any(x => x.X == row && x.Y == column) ? "obstacleColor" : "regularColor";
+    }
+
+    List<Node> nodeObstacles = new List<Node>();
+
+    public void SetAsObstacle(int row, int column)
+    {
+        nodeObstacles.Add(new Node { X = row, Y = column });
+    }
+
+    public class Node
+    {
+        public int X { get; set; }
+        public int Y { get; set; }
+    }
+    }
+

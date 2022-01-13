@@ -1,0 +1,14 @@
+﻿
+.wrapper {
+    display: grid;
+    grid-template-columns: 100px 100px 100px 100px 100px 100px 100px 100px 100px 100px;
+    grid-auto-rows: 100px;
+}
+
+.regularColor {
+    background-color: white;
+}
+
+.obstacleColor {
+    background-color: black;
+}
