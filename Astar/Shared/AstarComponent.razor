@@ -1,50 +1,121 @@
 ﻿
-<h3>Astar</h3>
+
+<button @onclick="@FindPath">Find Path</button>
+
+<label style="margin-left:50px;">Enter number of obstacles </label>
+<input type="number" @bind="@inputValue" @oninput="OnInputEvent" />
 
 
+<p><input @bind="testVar" /></p>
 
 <div class="wrapper">
-    
-@for (int row = 0; row < end.GetLength(0); row++)
-{
-   
-        @for (int column = 0; column  < end.GetLength(1); column++)
+
+    @for (int row = 0; row < allNodes.GetLength(0); row++)
+    {
+
+        @for (int column = 0; column < allNodes.GetLength(1); column++)
         {
             int rowToPass = row;
             int columnToPass = column;
-          
-            <button
-                    class="@css(rowToPass, columnToPass)"
-                    @onclick="() => SetAsObstacle(rowToPass, columnToPass)" style="margin:5%;">
-            </button>   
+
+            <button class="@css(rowToPass, columnToPass)"
+                    @onclick="() => SetNode(rowToPass, columnToPass)" style="margin:5%;">
+            </button>
         }
-   
-}
-   
+
+    }
+
 </div>
 
 
 
 
 @code {
- 
-    bool[,] end = new bool[10, 10];
-
-    string css(int row, int column) {
-        return nodeObstacles.Any(x => x.X == row && x.Y == column) ? "obstacleColor" : "regularColor";
-    }
-
-    List<Node> nodeObstacles = new List<Node>();
-
-    public void SetAsObstacle(int row, int column)
+    public int? testVar { get; set; }
+    private int inputValue = 10;
+    private void OnInputEvent(ChangeEventArgs changeEvent)
     {
-        nodeObstacles.Add(new Node { X = row, Y = column });
+        inputValue = int.TryParse((string?)changeEvent.Value, out int number) ? number : inputValue;
     }
 
-    public class Node
+    bool[,] allNodes = new bool[20, 30];
+
+    int count = 0;
+    string css(int row, int column)
+    {
+        var start = nodes.FirstOrDefault(x => x.X == row && x.Y == column && x.IsStart);
+        if (start != null)
+            return "startColor";
+
+        var end = nodes.FirstOrDefault(x => x.X == row && x.Y == column && x.IsEnd);
+        if (end != null)
+            return "endColor";
+
+        return nodes.Any(x => x.X == row && x.Y == column && x.IsStart == false && x.IsEnd == false)
+            ? "obstacleColor" : "regularColor";
+
+    }
+
+    List<Node> nodes = new List<Node>();
+    Node startNode => nodes.FirstOrDefault(n => n.IsStart) ?? new Node();
+    Node endNode => nodes.FirstOrDefault(n => n.IsEnd) ?? new Node();
+
+    private void SetNode(int row, int column)
+    {
+        if (count == 0)
+        {
+            if (!nodes.Any(n => n.X == row && n.Y == column))
+            {
+                nodes.Add(new Node { X = row, Y = column, IsEnd = false, IsStart = true });
+                count++;
+            }
+        }
+        else if (count > 0 && count <= inputValue)
+        {
+            if (!nodes.Any(n => n.X == row && n.Y == column))
+            {
+                nodes.Add(new Node { X = row, Y = column, IsEnd = false, IsStart = false, IsObstacle = true });
+                count++;
+            }
+        }
+        else if (count == inputValue + 1)
+        {
+            if (!nodes.Any(n => n.X == row && n.Y == column))
+            {
+                nodes.Add(new Node { X = row, Y = column, IsEnd = true, IsStart = false });
+                count++;
+            }
+        }
+
+    }
+
+    private void FindPath()
+    {
+        List<Node> openNodes = new List<Node>();
+        List<Node> closedNodes = new List<Node>();
+
+        openNodes.Add(startNode);
+
+        @*while (openNodes.Count > 0)
+        {
+            for (int i = 1; i < openNodes.Count; i++)
+            {
+                if ()
+            }
+        }*@
+    }
+
+    private class Node
     {
         public int X { get; set; }
         public int Y { get; set; }
+        public bool IsStart { get; set; }
+        public bool IsEnd { get; set; }
+        public bool IsObstacle { get; set; }
+
+        public int F { get { return G + H; } }
+        public int G { get; set; }
+        public int H { get; set; }
     }
     }
 
