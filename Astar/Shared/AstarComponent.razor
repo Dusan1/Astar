@@ -18,7 +18,7 @@
             int rowToPass = row;
             int columnToPass = column;
 
-            <button class="@css(rowToPass, columnToPass)"
+            <button class="@css(rowToPass, columnToPass) @rowToPass - @columnToPass"
                     @onclick="() => SetNode(rowToPass, columnToPass)" style="margin:5%;">
             </button>
         }
@@ -32,7 +32,7 @@
 
 @code {
     public int? testVar { get; set; }
-    private int inputValue = 10;
+    private int inputValue = 3;
     private void OnInputEvent(ChangeEventArgs changeEvent)
     {
         inputValue = int.TryParse((string?)changeEvent.Value, out int number) ? number : inputValue;
@@ -40,9 +40,15 @@
 
     bool[,] allNodes = new bool[20, 30];
 
+
+
     int count = 0;
     string css(int row, int column)
     {
+
+        if (currentlyCheckingNodes.FirstOrDefault(x => x.X == row && x.Y == column) != null)
+            return "checkingColor";
+
         var start = nodes.FirstOrDefault(x => x.X == row && x.Y == column && x.IsStart);
         if (start != null)
             return "startColor";
@@ -51,14 +57,36 @@
         if (end != null)
             return "endColor";
 
-        return nodes.Any(x => x.X == row && x.Y == column && x.IsStart == false && x.IsEnd == false)
-            ? "obstacleColor" : "regularColor";
+        if (path.FirstOrDefault(a => a.X == row && a.Y == column) !=  null)
+        {
+            return "pathColor";
+        }
+
+        if (nodes.Any(x => x.X == row && x.Y == column && x.IsObstacle))
+            return "obstacleColor";
+
+        if (closedNodes.FirstOrDefault(x => x.X == row && x.Y == column) != null)
+            return "closedNodeColor";
+
+        if (openNodes.FirstOrDefault(x => x.X == row && x.Y == column) != null)
+            return "openNodeColor";
+
+        return "";
 
     }
 
     List<Node> nodes = new List<Node>();
-    Node startNode => nodes.FirstOrDefault(n => n.IsStart) ?? new Node();
-    Node endNode => nodes.FirstOrDefault(n => n.IsEnd) ?? new Node();
+    List<Node> currentlyCheckingNodes = new List<Node>();
+
+
+    List<Node> openNodes = new List<Node>();
+    List<Node> closedNodes = new List<Node>();
+
+    Node startNode => nodes.FirstOrDefault(n => n.IsStart);
+    Node endNode => nodes.FirstOrDefault(n => n.IsEnd);
+    List<Node> obstacleNodes => nodes.Where(n => n.IsObstacle).ToList();
+
+    List<Node> path = new List<Node>();
 
     private void SetNode(int row, int column)
     {
@@ -89,23 +117,131 @@
 
     }
 
-    private void FindPath()
+
+
+    private async Task FindPath()
     {
-        List<Node> openNodes = new List<Node>();
-        List<Node> closedNodes = new List<Node>();
+        @*var neighbouringNodes = GetNeighbouringNodes(startNode);
 
-        openNodes.Add(startNode);
-
-        @*while (openNodes.Count > 0)
-        {
-            for (int i = 1; i < openNodes.Count; i++)
+            foreach (var neighbour in neighbouringNodes)
             {
-                if ()
+                currentlyCheckingNodes.Add(neighbour);
+                StateHasChanged();
+                await Task.Delay(2000);
+                currentlyCheckingNodes.Clear();
+
+            }*@
+
+
+
+
+        if (startNode != null)
+            openNodes.Add(startNode);
+
+
+
+        while (openNodes.Count > 0)
+        {
+            Node q = openNodes.OrderBy(node => node.F).First();
+
+            openNodes.Remove(q);
+
+            var neighbouringNodes = GetNeighbouringNodes(q);
+
+            foreach (var neighbour in neighbouringNodes)
+            {
+
+
+
+
+                currentlyCheckingNodes.Add(neighbour);
+                StateHasChanged();
+                //await Task.Delay(2000);
+
+                neighbour.G = q.G + GetDistanceBetweenNodes(q, neighbour);
+
+                neighbour.H = q.G + GetDistanceBetweenNodes(neighbour, endNode);
+                neighbour.Parent = q;
+                // neighbour.F = neighbour.G + neighbour.H;
+
+                if (neighbour == endNode)
+                {
+                    closedNodes.Add(q);
+                    currentlyCheckingNodes.Clear();
+                    RetracePath(startNode, neighbour);
+                    return;
+                }
+
+                if (obstacleNodes.Any(o => o == neighbour))
+                {
+                    continue;
+                }
+
+                if (openNodes.Any(on => on == neighbour && on.F < neighbour.F))
+                {
+                    continue;
+                }
+
+                if (closedNodes.Any(cn => cn == neighbour && cn.F < neighbour.F))
+                {
+                    continue;
+                }
+                else
+                {
+                    openNodes.Add(neighbour);
+
+                }
+
+
+                currentlyCheckingNodes.Clear();
             }
-        }*@
+            closedNodes.Add(q);
+        }
     }
 
-    private class Node
+
+    private void RetracePath(Node startNode, Node endNode)
+    {
+
+        Node currentNode = endNode;
+
+        while (currentNode != startNode)
+        {
+            path.Add(currentNode);
+            currentNode = currentNode.Parent;
+        }
+
+    }
+
+    private decimal GetDistanceBetweenNodes(Node node1, Node node2)
+    {
+        var dx = Math.Abs(node1.X - node2.X);
+        var dy = Math.Abs(node1.Y - node2.Y);
+
+        var regularDistance = 1m;
+        var diagonalDistance = (decimal)Math.Sqrt(2);
+
+        return regularDistance * (dx + dy) + (diagonalDistance - 2 * regularDistance) * Math.Min(dx, dy);
+    }
+
+    private List<Node> GetNeighbouringNodes(Node node)
+    {
+        var neighbouringNodes = new List<Node>();
+        for (int i = node.X - 1; i <= node.X + 1; i++)
+        {
+            for (int j = node.Y - 1; j <= node.Y + 1; j++)
+            {
+                if (i == node.X && j == node.Y)
+                    continue;
+
+                //if(i >= 0 && j)
+                neighbouringNodes.Add(new Node() { X = i, Y = j });
+            }
+        }
+        return neighbouringNodes;
+    }
+
+    private class Node : IEquatable<Node>
     {
         public int X { get; set; }
         public int Y { get; set; }
@@ -113,9 +249,44 @@
         public bool IsEnd { get; set; }
         public bool IsObstacle { get; set; }
 
-        public int F { get { return G + H; } }
-        public int G { get; set; }
-        public int H { get; set; }
+        public decimal F { get { return G + H; } }
+        public decimal G { get; set; }
+        public decimal H { get; set; }
+
+        public Node Parent { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Node);
+        }
+
+        public bool Equals(Node other)
+        {
+            return other != null && other.X == X && other.Y == Y;
+        }
+
+        public static bool operator ==(Node obj1, Node obj2)
+        {
+            if (ReferenceEquals(obj1, obj2))
+            {
+                return true;
+            }
+            if (ReferenceEquals(obj1, null))
+            {
+                return false;
+            }
+            if (ReferenceEquals(obj2, null))
+            {
+                return false;
+            }
+
+            return obj1.Equals(obj2);
+        }
+
+        public static bool operator !=(Node obj1, Node obj2)
+        {
+            return !(obj1 == obj2);
+        }
     }
     }
 

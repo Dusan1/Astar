@@ -21,4 +21,20 @@
     background-color: green;
 }
 
+.checkingColor {
+    background-color: yellow;
+}
+
+.openNodeColor {
+    background-color: gray;
+}
+
+.closedNodeColor {
+    background-color: black;
+}
+
+.pathColor {
+    background-color: pink;
+}
+
 /*replace: option + command + f*/
