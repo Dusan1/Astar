@@ -1,8 +1,8 @@
 ﻿
 .wrapper {
     display: grid;
-    grid-template-columns: 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px 30px;
-    grid-auto-rows: 30px;
+    grid-template-columns: 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px 70px;
+    grid-auto-rows: 70px;
 }
 
 .regularColor {
@@ -30,7 +30,7 @@
 }
 
 .closedNodeColor {
-    background-color: black;
+    background-color: lightblue;
 }
 
 .pathColor {
